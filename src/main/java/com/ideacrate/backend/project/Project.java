@@ -1,5 +1,6 @@
 package com.ideacrate.backend.project;
 
+import com.ideacrate.backend.user.User;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
@@ -23,6 +24,8 @@ public class Project {
 
     @Column(columnDefinition = "TEXT")
     private String fullDescription; // Renamed from detailedDescription
+
+
 
     @Column(nullable = false)
     private String category;
@@ -58,4 +61,10 @@ public class Project {
     @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="author_id")
+    private User author;
+
+    
 }

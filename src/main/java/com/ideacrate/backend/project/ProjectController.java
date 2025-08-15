@@ -1,7 +1,12 @@
 package com.ideacrate.backend.project;
 
+import com.ideacrate.backend.user.User;
+import com.ideacrate.backend.user.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,10 +19,12 @@ public class ProjectController {
 
 
     private final ProjectService projectService;
+    private final UserRepository userRepository;
     public final ProjectRepository projectRepository;
 
-    public ProjectController(ProjectService projectService, ProjectRepository projectRepository){
+    public ProjectController(ProjectService projectService, UserRepository userRepository, ProjectRepository projectRepository){
         this.projectService = projectService;
+        this.userRepository = userRepository;
         this.projectRepository = projectRepository;
     }
 
@@ -33,10 +40,32 @@ public class ProjectController {
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    @PostMapping()
-    public ResponseEntity<ProjectResponseDTO> createProject(@RequestBody ProjectRequestDTO projectRequestDTO){
-        ProjectResponseDTO createdProject = projectService.createProject(projectRequestDTO);
-        return  new ResponseEntity<>(createdProject,HttpStatus.CREATED);
+    @PostMapping
+    public ResponseEntity<ProjectResponseDTO> createProject(@RequestBody ProjectRequestDTO request) {
+        // get authenticated user's email/username
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = null;
+        if (auth != null && auth.isAuthenticated()) {
+            Object principal = auth.getPrincipal();
+            if (principal instanceof UserDetails) {
+                email = ((UserDetails) principal).getUsername();
+            } else if (principal instanceof String) {
+                email = (String) principal;
+            }
+        }
+
+        if (email == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        Optional<User> optUser = userRepository.findByEmail(email);
+        if (optUser.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        User author = optUser.get();
+        ProjectResponseDTO created = projectService.createProject(request, author);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")

@@ -1,5 +1,6 @@
 package com.ideacrate.backend.project;
 
+import com.ideacrate.backend.user.User;
 import org.springframework.stereotype.Service;
 import java.util.Arrays;
 import java.util.List;
@@ -30,24 +31,26 @@ public class ProjectService {
     // --- POST Endpoint ---
     // In ProjectService.java
 
-    public ProjectResponseDTO createProject(ProjectRequestDTO requestDTO) {
+    public ProjectResponseDTO createProject(ProjectRequestDTO request, User author) {
         Project newProject = new Project();
 
-        newProject.setTitle(requestDTO.getTitle());
-        newProject.setDescription(requestDTO.getDescription());
-        newProject.setFullDescription(requestDTO.getDetailedDescription());
-        newProject.setCategory(requestDTO.getCategory());
-        newProject.setTechStack(requestDTO.getTechStack());
-        newProject.setDemoUrl(requestDTO.getDemoUrl());
-        newProject.setImageUrl(requestDTO.getImageUrl());
+        newProject.setTitle(request.getTitle());
+        newProject.setDescription(request.getDescription());
+        newProject.setFullDescription(request.getDetailedDescription());
+        newProject.setCategory(request.getCategory());
+        newProject.setDemoUrl(request.getDemoUrl());
+        newProject.setImageUrl(request.getImageUrl());
+        newProject.setTechStack(request.getTechStack());
+        newProject.setGithubUrl(request.getGithubLink());
+        //project.setStatus(request.getStatus());
+        newProject.setFeedback(request.getFeedback());
 
         // --- THIS IS THE MISSING LINE ---
-        // The DTO has 'githubLink', but the entity has 'githubUrl'. We need to map it.
-        newProject.setGithubUrl(requestDTO.getGithubLink());
 
         newProject.setStatus("PENDING");
         newProject.setStarsCount(0);
         newProject.setViewsCount(0);
+        newProject.setAuthor(author);
 
         Project savedProject = projectRepository.save(newProject);
         return mapToProjectResponseDTO(savedProject);
@@ -108,23 +111,36 @@ public class ProjectService {
         responseDTO.setGithubUrl(project.getGithubUrl());
         responseDTO.setSubmittedAt(project.getSubmittedAt());
 
-        if (project.getTechStack() != null && !project.getTechStack().isEmpty()) {
-            responseDTO.setTechStack(Arrays.asList(project.getTechStack().split(",")));
+        if (project.getTechStack() != null && !project.getTechStack().isBlank()) {
+            List<String> techs = Arrays.stream(project.getTechStack().split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .collect(Collectors.toList());
+            responseDTO.setTechStack(techs);
         } else {
-            responseDTO.setTechStack(List.of()); // Ensure it's never null
+            responseDTO.setTechStack(List.of());
         }
 
-        responseDTO.setUser(createPlaceholderAuthor());
+        if (project.getAuthor() != null) {
+            AuthorDTO a = new AuthorDTO();
+            a.setId(project.getAuthor().getId());
+            a.setFirstName(project.getAuthor().getFirstName());
+            a.setLastName(project.getAuthor().getLastName());
+            a.setProfileImageUrl(project.getAuthor().getAvatar());
+            responseDTO.setUser(a);
+        }
+
+
         return responseDTO;
     }
 
-    private AuthorDTO createPlaceholderAuthor() {
-        AuthorDTO authorDTO = new AuthorDTO();
-        // In a real app, you would fetch the project's actual author
-        authorDTO.setId(1L);
-        authorDTO.setName("Placeholder User");
-        authorDTO.setAvatar("https://api.dicebear.com/7.x/avataaars/svg?seed=placeholder");
-        authorDTO.setUniversity("Placeholder University");
-        return authorDTO;
-    }
+//    private AuthorDTO createPlaceholderAuthor() {
+//        AuthorDTO authorDTO = new AuthorDTO();
+//        // In a real app, you would fetch the project's actual author
+//        authorDTO.setId(1L);
+//        authorDTO.setName("Placeholder User");
+//        authorDTO.setAvatar("https://api.dicebear.com/7.x/avataaars/svg?seed=placeholder");
+//        authorDTO.setUniversity("Placeholder University");
+//        return authorDTO;
+//    }
 }

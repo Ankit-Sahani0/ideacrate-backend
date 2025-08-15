@@ -12,4 +12,6 @@ public class ProjectRequestDTO {
     private String category;
     private String demoUrl;
     private String imageUrl;
+    private String status;
+    private String feedback;
 }
