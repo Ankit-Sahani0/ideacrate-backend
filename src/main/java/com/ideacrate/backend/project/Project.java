@@ -6,6 +6,8 @@ import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @Entity
@@ -60,11 +62,35 @@ public class Project {
 
     @UpdateTimestamp
     @Column(nullable = false)
-    private LocalDateTime updatedAt;
+    private LocalDateTime updatedAt = LocalDateTime.now();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="author_id")
     private User author;
 
+    // Add these methods if not using Lombok @Data
+    @ManyToMany
+    @JoinTable(
+            name="project_contributors",
+            joinColumns = @JoinColumn(name="project_id"),
+            inverseJoinColumns = @JoinColumn(name="user_id")
+    )
+    private Set<User> contributors = new HashSet<>();
+
+    @Column(name = "view_count")
+    private Long viewCount = 0L;
     
+    @Column(name = "created_at")
+    private LocalDateTime createdAt = LocalDateTime.now();
+    
+    
+    
+    @ElementCollection
+    private Set<String> tags = new HashSet<>();
+    
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
 }

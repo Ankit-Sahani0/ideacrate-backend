@@ -21,4 +21,7 @@ public class ProjectResponseDTO {
     private String feedback; // Added
     private LocalDateTime submittedAt; // Renamed
     private AuthorDTO user; // Renamed from 'author' to 'user'
+    private  LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private List<AuthorDTO> authors;
 }

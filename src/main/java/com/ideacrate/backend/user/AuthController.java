@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/auth")
-@CrossOrigin("http://localhost:3000")
 public class AuthController {
 
     private final UserService userService;
@@ -36,19 +35,32 @@ public class AuthController {
         return new ResponseEntity<>(responseDTO, HttpStatus.CREATED);
     }
 
+    // In AuthController.java
+
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDTO> loginUser(@RequestBody LoginRequestDTO loginRequest) {
-        // This part stays the same: it validates the user's password.
-        // If it's wrong, it will throw an exception.
+        // 1. Authenticate the user. This returns the full User entity.
         User authenticatedUser = userService.loginUser(loginRequest);
 
-        // If the login was successful, generate a token for that user.
+        // 2. Generate a JWT for that user.
         String token = jwtService.generateToken(authenticatedUser);
 
-        // Create the response object containing the token.
-        LoginResponseDTO responseDTO = new LoginResponseDTO(token);
+        // 3. Create the UserResponseDTO to hold the public user details.
+        UserResponseDTO userDTO = new UserResponseDTO();
+        userDTO.setId(authenticatedUser.getId());
+        userDTO.setFirstName(authenticatedUser.getFirstName());
+        userDTO.setLastName(authenticatedUser.getLastName());
+        userDTO.setEmail(authenticatedUser.getEmail());
+        userDTO.setUniversity(authenticatedUser.getUniversity());
+        userDTO.setRole(authenticatedUser.getRole());
 
-        // Return the token in the response.
-        return new ResponseEntity<>(responseDTO, HttpStatus.OK);
+        // 4. Build the final response containing both the token and user DTO.
+        LoginResponseDTO authResponse = LoginResponseDTO.builder()
+                .token(token)
+                .user(userDTO)
+                .build();
+
+        // 5. Return the response.
+        return ResponseEntity.ok(authResponse);
     }
 }
