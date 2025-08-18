@@ -1,16 +1,18 @@
 package com.ideacrate.backend.user;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import java.util.Optional;
 
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     // Remove PasswordEncoder from the constructor
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public User registerUser(RegistrationRequestDTO registrationRequest) {
@@ -23,9 +25,7 @@ public class UserService {
         newUser.setEmail(registrationRequest.getEmail());
         newUser.setUniversity(registrationRequest.getUniversity());
 
-        // WARNING: Storing plain text password (temporary for learning)
-        newUser.setPassword(registrationRequest.getPassword());
-
+        newUser.setPassword(passwordEncoder.encode(registrationRequest.getPassword()));
         newUser.setRole("USER");
         return userRepository.save(newUser);
     }
@@ -34,10 +34,12 @@ public class UserService {
         User user = userRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new IllegalStateException("Invalid email or password"));
 
-        // WARNING: Comparing plain text passwords (temporary for learning)
-        if (!user.getPassword().equals(loginRequest.getPassword())) {
+        // CORRECTLY verify the password using the encoder
+        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             throw new IllegalStateException("Invalid email or password");
         }
+        
         return user;
     }
+    
 }

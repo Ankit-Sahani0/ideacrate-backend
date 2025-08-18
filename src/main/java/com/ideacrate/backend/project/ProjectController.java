@@ -81,6 +81,8 @@ public class ProjectController {
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
+    /**
+
     @GetMapping("/{projectId}/contributors/{userId}/check")
     public ResponseEntity<Boolean> isContributor(
             @PathVariable Long projectId,
@@ -100,6 +102,8 @@ public class ProjectController {
         return ResponseEntity.ok("Contributor added successfully");
     }
 
+
+
     @DeleteMapping("/{projectId}/contributors/{userId}")
     public ResponseEntity<String> removeContributor(
             @PathVariable Long projectId,
@@ -117,6 +121,7 @@ public class ProjectController {
         List<AuthorDTO> contributors = projectService.getProjectContributors(projectId);
         return ResponseEntity.ok(contributors);
     }
+     */
 
     @PostMapping("/{id}/view")
     public ResponseEntity<ProjectResponseDTO> incrementViewCount(@PathVariable Long id) {
@@ -128,4 +133,49 @@ public class ProjectController {
         }
     }
 
-}
+    @GetMapping("/{projectId}/contributors")
+    public ResponseEntity<List<ContributorDTO>> getProjectContributors(@PathVariable Long projectId) {
+        List<ContributorDTO> contributors = projectService.getProjectContributors(projectId);
+        return ResponseEntity.ok(contributors);
+    }
+
+    @PostMapping("/{projectId}/contributors")
+    public ResponseEntity<ContributorDTO> addContributor(
+            @PathVariable Long projectId,
+            @RequestParam Long userId,
+            @RequestParam(defaultValue = "CONTRIBUTOR") String role,
+            @AuthenticationPrincipal User currentUser) {
+
+        System.out.println("=== Add Contributor Debug ===");
+        System.out.println("Project ID: " + projectId);
+        System.out.println("User ID: " + userId);
+        System.out.println("Role: " + role);
+        System.out.println("Current User: " + (currentUser != null ? currentUser.getEmail() : "null"));
+
+        if (currentUser == null) {
+            System.out.println("Current user is null - authentication failed");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            ContributorDTO contributor = projectService.addContributor(projectId, userId, role, currentUser);
+            return ResponseEntity.ok(contributor);
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        }
+
+    }
+
+    @DeleteMapping("/{projectId}/contributors/{userId}")
+    public ResponseEntity<Void> removeContributor(
+            @PathVariable Long projectId,
+            @PathVariable Long userId,
+            @AuthenticationPrincipal User currentUser) {
+
+        projectService.removeContributor(projectId, userId, currentUser);
+        return ResponseEntity.noContent().build();
+    }
+
+
+    }

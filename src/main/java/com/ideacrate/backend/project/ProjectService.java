@@ -3,7 +3,10 @@ package com.ideacrate.backend.project;
 import com.ideacrate.backend.user.User;
 import com.ideacrate.backend.user.UserRepository;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -11,12 +14,16 @@ import java.util.stream.Collectors;
 @Service
 public class ProjectService {
 
-    private final UserRepository userRepository;
-    private final ProjectRepository projectRepository;
 
-    public ProjectService(UserRepository userRepository, ProjectRepository projectRepository) {
-        this.userRepository = userRepository;
+    private final ProjectRepository projectRepository;
+    private final ProjectContributorRepository projectContributorRepository;
+    private final UserRepository userRepository;
+
+    public ProjectService(ProjectRepository projectRepository, ProjectContributorRepository projectContributorRepository, UserRepository userRepository) {
+
         this.projectRepository = projectRepository;
+        this.projectContributorRepository = projectContributorRepository;
+        this.userRepository = userRepository;
     }
 
     // --- GET Endpoints ---
@@ -56,9 +63,9 @@ public class ProjectService {
         newProject.setFeedback(request.getFeedback());
         newProject.setStatus("PENDING");
         newProject.setStarsCount(0);
-        newProject.setViewsCount(0);
+        newProject.setViewCount(0L);
         newProject.setAuthor(author);
-        newProject.setSubmittedAt(java.time.LocalDateTime.now());
+        newProject.setCreatedAt(java.time.LocalDateTime.now());
 
         Project savedProject = projectRepository.save(newProject);
         return mapToProjectResponseDTO(savedProject);
@@ -123,12 +130,15 @@ public class ProjectService {
         responseDTO.setDemoUrl(project.getDemoUrl());
         responseDTO.setImageUrl(project.getImageUrl());
         responseDTO.setStarsCount(project.getStarsCount());
-        responseDTO.setViewsCount(project.getViewsCount());
+        responseDTO.setViewCount(project.getViewCount()); // Fixed
         responseDTO.setStatus(project.getStatus());
         responseDTO.setFeedback(project.getFeedback());
         responseDTO.setGithubUrl(project.getGithubUrl());
-        responseDTO.setSubmittedAt(project.getSubmittedAt());
+        responseDTO.setCreatedAt(project.getCreatedAt()); // Fixed
+        responseDTO.setUpdatedAt(project.getUpdatedAt());
+        responseDTO.setTags(project.getTags());
 
+        // Handle tech stack
         if (project.getTechStack() != null && !project.getTechStack().isBlank()) {
             List<String> techs = Arrays.stream(project.getTechStack().split(","))
                     .map(String::trim)
@@ -139,85 +149,109 @@ public class ProjectService {
             responseDTO.setTechStack(List.of());
         }
 
+        // Handle author
         if (project.getAuthor() != null) {
-            AuthorDTO a = new AuthorDTO();
-            a.setId(project.getAuthor().getId());
-            a.setFirstName(project.getAuthor().getFirstName());
-            a.setLastName(project.getAuthor().getLastName());
-            a.setProfileImageUrl(project.getAuthor().getAvatar());
-            responseDTO.setUser(a);
+            AuthorDTO authorDTO = new AuthorDTO();
+            authorDTO.setId(project.getAuthor().getId());
+            authorDTO.setFirstName(project.getAuthor().getFirstName());
+            authorDTO.setLastName(project.getAuthor().getLastName());
+            authorDTO.setProfileImageUrl(project.getAuthor().getAvatar());
+            responseDTO.setAuthor(authorDTO); // Fixed
         }
 
         return responseDTO;
     }
 
-    public void addContributor(Long projectId, Long userId, User currentUser) {
-        Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
-
-        // Only project author can add contributors
-        if (!project.getAuthor().getId().equals(currentUser.getId())) {
-            throw new RuntimeException("Only project author can add contributors");
-        }
-
-        User contributor = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        // Check if user is already a contributor
-        if (project.getContributors().contains(contributor)) {
-            throw new RuntimeException("User is already a contributor");
-        }
-
-        project.getContributors().add(contributor);
-        projectRepository.save(project);
-    }
-
-    public void removeContributor(Long projectId, Long userId, User currentUser) {
-        Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
-
-        // Only project author can remove contributors
-        if (!project.getAuthor().getId().equals(currentUser.getId())) {
-            throw new RuntimeException("Only project author can remove contributors");
-        }
-
-        User contributor = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        project.getContributors().remove(contributor);
-        projectRepository.save(project);
-    }
-
-    public List<AuthorDTO> getProjectContributors(Long projectId) {
-        Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
-
-        return project.getContributors().stream()
-                .map(user -> {
-                    AuthorDTO authorDTO = new AuthorDTO();
-                    authorDTO.setId(user.getId());
-                    authorDTO.setFirstName(user.getFirstName());
-                    authorDTO.setLastName(user.getLastName());
-                    authorDTO.setProfileImageUrl(user.getAvatar());
-                    return authorDTO;
-                })
-                .toList();
-    }
-
-    public boolean isContributor(Long projectId, Long userId) {
-        Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
-
-        return project.getContributors().stream()
-                .anyMatch(contributor -> contributor.getId().equals(userId));
-    }
 
     public ProjectResponseDTO incrementViewCount(Long projectId) {
         Project project = projectRepository.findById(projectId)
-        .orElseThrow( ()-> new RuntimeException("Project Not Found") );
-                
-        project.setViewCount(project.getViewCount() + 1);
+                .orElseThrow(() -> new RuntimeException("Project Not Found"));
+
+        project.setViewCount(project.getViewCount() + 1); // Fixed method name
         return mapToProjectResponseDTO(projectRepository.save(project));
+    }
+
+    public List<ContributorDTO> getProjectContributors(Long projectId){
+        return projectContributorRepository.findByProjectId(projectId)
+                .stream()
+                .map(this::mapToContributorDTO)
+                .collect(Collectors.toList());
+    }
+
+    public ContributorDTO addContributor(Long projectId, Long userId, String role, User currentUser) {
+        System.out.println("=== Service addContributor Debug ===");
+        System.out.println("Looking for project ID: " + projectId);
+        // Check if project exists
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+
+        System.out.println("Project found: " + project.getTitle());
+        System.out.println("Project author ID: " + project.getAuthor().getId());
+        System.out.println("Current user ID: " + currentUser.getId());
+
+        // Check if current user is the project owner
+        if (!project.getAuthor().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Only project owner can add contributors");
+        }
+
+        System.out.println("User is project owner - proceeding");
+
+        // Check if user exists
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        System.out.println("User to add found: " + user.getEmail());
+
+        // Check if user is already a contributor
+        if (projectContributorRepository.existsByProjectIdAndUserId(projectId, userId)) {
+            throw new RuntimeException("User is already a contributor");
+        }
+
+        // Check if trying to add project owner as contributor
+        if (project.getAuthor().getId().equals(userId)) {
+            throw new RuntimeException("Project owner cannot be added as contributor");
+        }
+
+
+        // Create and save contributor
+        ProjectContributor contributor = new ProjectContributor(project, user, role);
+        ProjectContributor saved = projectContributorRepository.save(contributor);
+
+        return mapToContributorDTO(saved);
+    }
+
+    public void removeContributor(Long projectId, Long userId, User currentUser) {
+        // Check if project exists
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+
+        // Check if current user is the project owner
+        if (!project.getAuthor().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Only project owner can remove contributors");
+        }
+
+        // Check if contributor exists
+        if (!projectContributorRepository.existsByProjectIdAndUserId(projectId, userId)) {
+            throw new RuntimeException("User is not a contributor");
+        }
+
+        projectContributorRepository.deleteByProjectIdAndUserId(projectId, userId);
+    }
+
+
+
+
+    private ContributorDTO mapToContributorDTO(ProjectContributor contributor) {
+        ContributorDTO dto = new ContributorDTO();
+        dto.setId(contributor.getId());
+        dto.setUserId(contributor.getUser().getId());
+        dto.setFirstName(contributor.getUser().getFirstName());
+        dto.setLastName(contributor.getUser().getLastName());
+        dto.setEmail(contributor.getUser().getEmail());
+        dto.setProfileImageUrl(contributor.getUser().getAvatar());
+        dto.setRole(contributor.getRole());
+        dto.setAddedAt(contributor.getAddedAt());
+        return dto;
     }
 
 }

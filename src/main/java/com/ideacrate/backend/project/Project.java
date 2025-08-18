@@ -25,9 +25,7 @@ public class Project {
     private String description;
 
     @Column(columnDefinition = "TEXT")
-    private String fullDescription; // Renamed from detailedDescription
-
-
+    private String fullDescription;
 
     @Column(nullable = false)
     private String category;
@@ -39,58 +37,37 @@ public class Project {
     private String imageUrl;
 
     @Column(nullable = false)
-    private int starsCount = 0; // Renamed from likes
+    private int starsCount = 0;
+
+    @Column(nullable = false)
+    private Long viewCount = 0L; // Use only this one
 
     @Column
-    private Integer viewsCount = 0; // New field
-
-    @Column
-    private String status;
+    private String status = "PENDING";
 
     @Column(columnDefinition = "TEXT")
-    private String feedback; // New field
+    private String feedback;
 
     @Column(nullable = false)
     private String techStack;
 
     @Column(nullable = false)
-    private String githubUrl; // Renamed from githubLink
+    private String githubUrl;
 
     @CreationTimestamp
     @Column(updatable = false, nullable = false)
-    private LocalDateTime submittedAt; // Renamed from createdAt
+    private LocalDateTime createdAt; // Use only this one
 
     @UpdateTimestamp
     @Column(nullable = false)
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="author_id")
+    @JoinColumn(name="author_id", nullable = false)
     private User author;
 
-    // Add these methods if not using Lombok @Data
-    @ManyToMany
-    @JoinTable(
-            name="project_contributors",
-            joinColumns = @JoinColumn(name="project_id"),
-            inverseJoinColumns = @JoinColumn(name="user_id")
-    )
-    private Set<User> contributors = new HashSet<>();
-
-    @Column(name = "view_count")
-    private Long viewCount = 0L;
-    
-    @Column(name = "created_at")
-    private LocalDateTime createdAt = LocalDateTime.now();
-    
-    
-    
     @ElementCollection
+    @CollectionTable(name = "project_tags", joinColumns = @JoinColumn(name = "project_id"))
+    @Column(name = "tag")
     private Set<String> tags = new HashSet<>();
-    
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-
 }
