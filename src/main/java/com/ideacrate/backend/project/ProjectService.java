@@ -2,11 +2,11 @@ package com.ideacrate.backend.project;
 
 import com.ideacrate.backend.user.User;
 import com.ideacrate.backend.user.UserRepository;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Date;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -254,4 +254,58 @@ public class ProjectService {
         return dto;
     }
 
-}
+    // Add this method to your ProjectService class
+
+    public List<ProjectResponseDTO> searchProjects(String query,
+                                                   String category,
+                                                   String tech,
+                                                   String sortBy,
+                                                   String sortDir) {
+
+        String searchTerm = (query == null || query.isBlank()) ? null : query.trim().toLowerCase();
+        String categoryTerm = (category == null || category.isBlank()
+                || category.equalsIgnoreCase("All Categories")) ? null : category.trim();
+
+        List<Project> raw = projectRepository.searchProjects(searchTerm, categoryTerm);
+
+        // Optional tech filter (case-insensitive, matches any token)
+        if (tech != null && !tech.isBlank()) {
+            String techFilter = tech.trim().toLowerCase();
+            raw = raw.stream()
+                    .filter(p -> getTechList(p).stream()
+                            .anyMatch(t -> t.equalsIgnoreCase(techFilter)))
+                    .collect(Collectors.toList());
+        }
+
+        // Sorting
+        Comparator<Project> comparator;
+        switch (sortBy == null ? "" : sortBy) {
+            case "starsCount" -> comparator = Comparator.comparing(Project::getStarsCount);
+            case "viewCount" -> comparator = Comparator.comparing(Project::getViewCount);
+            case "title" -> comparator = Comparator.comparing(p -> p.getTitle() == null ? "" : p.getTitle().toLowerCase());
+            default -> comparator = Comparator.comparing(p -> p.getCreatedAt() == null ? java.time.LocalDateTime.MIN : p.getCreatedAt());
+        }
+        if ("desc".equalsIgnoreCase(sortDir)) {
+            comparator = comparator.reversed();
+        }
+        raw.sort(comparator);
+
+        return raw.stream()
+                .map(this::mapToProjectResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    private List<String> getTechList(Project p) {
+        if (p.getTechStack() == null || p.getTechStack().isBlank()) return List.of();
+        return Arrays.stream(p.getTechStack().split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
+    }
+
+
+
+
+
+
+    }

@@ -177,5 +177,18 @@ public class ProjectController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<List<ProjectResponseDTO>> searchProjects(
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String tech,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+
+        List<ProjectResponseDTO> projects =
+                projectService.searchProjects(query, category, tech, sortBy, sortDir);
+        return ResponseEntity.ok(projects);
+    }
+
 
     }

@@ -33,6 +33,7 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.GET, "/api/v1/projects/*/contributors").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/projects/*/contributors").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/projects/*/contributors/*").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/projects/search").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/projects/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/projects/**").authenticated()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
