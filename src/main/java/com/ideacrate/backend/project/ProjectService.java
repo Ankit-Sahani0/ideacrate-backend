@@ -1,5 +1,6 @@
 package com.ideacrate.backend.project;
 
+import com.ideacrate.backend.enums.ProjectStatus;
 import com.ideacrate.backend.user.User;
 import com.ideacrate.backend.user.UserRepository;
 import org.springframework.data.domain.Sort;
@@ -55,13 +56,15 @@ public class ProjectService {
         newProject.setImageUrl(request.getImageUrl());
 
         // Handle tech stack properly
-        if (request.getTechStack() != null && !request.getTechStack().isEmpty()) {
-            newProject.setTechStack(String.join(",", request.getTechStack()));
+        if (request.getTechStack() != null && !request.getTechStack().isBlank()) {
+            newProject.setTechStack(request.getTechStack().trim());
+        } else {
+            newProject.setTechStack("");
         }
 
         newProject.setGithubUrl(request.getGithubLink());
-        newProject.setFeedback(request.getFeedback());
-        newProject.setStatus("PENDING");
+        //newProject.setFeedback(request.getFeedback());
+        newProject.setStatus(ProjectStatus.PENDING);
         newProject.setStarsCount(0);
         newProject.setViewCount(0L);
         newProject.setAuthor(author);

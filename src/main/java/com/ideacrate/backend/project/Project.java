@@ -1,5 +1,6 @@
 package com.ideacrate.backend.project;
 
+import com.ideacrate.backend.enums.ProjectStatus;
 import com.ideacrate.backend.user.User;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -42,8 +43,9 @@ public class Project {
     @Column(nullable = false)
     private Long viewCount = 0L; // Use only this one
 
-    @Column
-    private String status = "PENDING";
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private ProjectStatus status = ProjectStatus.PENDING;
 
     @Column(columnDefinition = "TEXT")
     private String feedback;

@@ -1,5 +1,6 @@
 package com.ideacrate.backend.project;
 
+import com.ideacrate.backend.enums.ProjectStatus;
 import lombok.Data;
 
 @Data
@@ -12,6 +13,4 @@ public class ProjectRequestDTO {
     private String category;
     private String demoUrl;
     private String imageUrl;
-    private String status;
-    private String feedback;
 }

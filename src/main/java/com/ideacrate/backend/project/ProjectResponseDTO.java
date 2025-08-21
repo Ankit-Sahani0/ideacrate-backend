@@ -1,5 +1,6 @@
 package com.ideacrate.backend.project;
 
+import com.ideacrate.backend.enums.ProjectStatus;
 import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,7 +19,7 @@ public class ProjectResponseDTO {
     private String imageUrl;
     private int starsCount;
     private Long viewCount; // Changed to Long
-    private String status;
+    private ProjectStatus status;
     private String feedback;
     private LocalDateTime createdAt; // Use only this
     private LocalDateTime updatedAt;

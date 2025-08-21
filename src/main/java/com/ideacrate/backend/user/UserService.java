@@ -1,5 +1,6 @@
 package com.ideacrate.backend.user;
 
+import com.ideacrate.backend.enums.Role;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +27,7 @@ public class UserService {
         newUser.setUniversity(registrationRequest.getUniversity());
 
         newUser.setPassword(passwordEncoder.encode(registrationRequest.getPassword()));
-        newUser.setRole("USER");
+        newUser.setRole(Role.STUDENT);
         return userRepository.save(newUser);
     }
 

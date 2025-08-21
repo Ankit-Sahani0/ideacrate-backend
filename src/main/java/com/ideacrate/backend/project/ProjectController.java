@@ -1,5 +1,6 @@
 package com.ideacrate.backend.project;
 
+import com.ideacrate.backend.enums.ProjectStatus;
 import com.ideacrate.backend.user.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -189,6 +190,8 @@ public class ProjectController {
                 projectService.searchProjects(query, category, tech, sortBy, sortDir);
         return ResponseEntity.ok(projects);
     }
+
+
 
 
     }

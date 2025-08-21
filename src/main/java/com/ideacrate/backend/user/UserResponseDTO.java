@@ -1,5 +1,6 @@
 package com.ideacrate.backend.user;
 
+import com.ideacrate.backend.enums.Role;
 import lombok.Data;
 
 @Data
@@ -9,5 +10,5 @@ public class UserResponseDTO {
     private String lastName;  // Changed from 'name'
     private String email;
     private String university;
-    private String role;
+    private Role role;
 }

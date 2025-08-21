@@ -1,6 +1,7 @@
 package com.ideacrate.backend.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.ideacrate.backend.enums.Role;
 import com.ideacrate.backend.project.Project;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -39,7 +40,9 @@ public class User implements UserDetails {
 
     private String avatar;
 
-    private String role;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role = Role.STUDENT;
 
 
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -48,7 +51,7 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(role));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
     @Override

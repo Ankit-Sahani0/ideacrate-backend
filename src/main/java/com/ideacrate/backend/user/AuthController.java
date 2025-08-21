@@ -30,7 +30,7 @@ public class AuthController {
         responseDTO.setLastName(newUser.getLastName());
         responseDTO.setEmail(newUser.getEmail());
         responseDTO.setUniversity(newUser.getUniversity());
-        responseDTO.setRole(newUser.getRole());
+        //responseDTO.setRole(newUser.getRole());
 
         return new ResponseEntity<>(responseDTO, HttpStatus.CREATED);
     }
@@ -52,7 +52,7 @@ public class AuthController {
         userDTO.setLastName(authenticatedUser.getLastName());
         userDTO.setEmail(authenticatedUser.getEmail());
         userDTO.setUniversity(authenticatedUser.getUniversity());
-        userDTO.setRole(authenticatedUser.getRole());
+        //userDTO.setRole(authenticatedUser.getRole());
 
         // 4. Build the final response containing both the token and user DTO.
         LoginResponseDTO authResponse = LoginResponseDTO.builder()
