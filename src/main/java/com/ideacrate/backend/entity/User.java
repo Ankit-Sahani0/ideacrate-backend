@@ -1,8 +1,7 @@
-package com.ideacrate.backend.user;
+package com.ideacrate.backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ideacrate.backend.enums.Role;
-import com.ideacrate.backend.project.Project;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

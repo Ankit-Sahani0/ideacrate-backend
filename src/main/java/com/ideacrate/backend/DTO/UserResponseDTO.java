@@ -1,4 +1,4 @@
-package com.ideacrate.backend.user;
+package com.ideacrate.backend.DTO;
 
 import com.ideacrate.backend.enums.Role;
 import lombok.Data;

@@ -1,4 +1,4 @@
-package com.ideacrate.backend.project;
+package com.ideacrate.backend.DTO;
 
 import lombok.Data;
 

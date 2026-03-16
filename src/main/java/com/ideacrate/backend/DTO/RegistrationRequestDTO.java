@@ -1,4 +1,4 @@
-package com.ideacrate.backend.user;
+package com.ideacrate.backend.DTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

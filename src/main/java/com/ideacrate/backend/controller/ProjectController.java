@@ -1,7 +1,11 @@
-package com.ideacrate.backend.project;
+package com.ideacrate.backend.controller;
 
-import com.ideacrate.backend.enums.ProjectStatus;
-import com.ideacrate.backend.user.User;
+import com.ideacrate.backend.DTO.ContributorDTO;
+import com.ideacrate.backend.DTO.ProjectRequestDTO;
+import com.ideacrate.backend.DTO.ProjectResponseDTO;
+import com.ideacrate.backend.entity.User;
+import com.ideacrate.backend.repository.ProjectRepository;
+import com.ideacrate.backend.service.ProjectService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -9,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+
 
 @RestController
 @RequestMapping("/api/v1/projects")
@@ -34,6 +39,17 @@ public class ProjectController {
         return projectService.getProjectById(id)
                 .map(projectDTO -> new ResponseEntity<>(projectDTO, HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @GetMapping("/my")
+    public List<ProjectResponseDTO> getMyProjects(@AuthenticationPrincipal User currentUser) {
+        return projectService.getProjectsByUser(currentUser);
+    }
+
+    @GetMapping("/pending")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    public List<ProjectResponseDTO> getPendingProjects() {
+        return projectService.getPendingProjects();
     }
 
     @PostMapping
@@ -126,12 +142,26 @@ public class ProjectController {
 
     @PostMapping("/{id}/view")
     public ResponseEntity<ProjectResponseDTO> incrementViewCount(@PathVariable Long id) {
-        try {
-            ProjectResponseDTO updatedProject = projectService.incrementViewCount(id);
-            return ResponseEntity.ok(updatedProject);
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+        ProjectResponseDTO updatedProject = projectService.incrementViewCount(id);
+        return ResponseEntity.ok(updatedProject);
+    }
+
+    @PutMapping("/{id}/approve")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ProjectResponseDTO> approveProject(@PathVariable Long id,
+                                                             @RequestBody(required = false) String comment,
+                                                             @AuthenticationPrincipal User admin) {
+        ProjectResponseDTO approved = projectService.approveProject(id, comment, admin);
+        return ResponseEntity.ok(approved);
+    }
+
+    @PutMapping("/{id}/reject")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ProjectResponseDTO> rejectProject(@PathVariable Long id,
+                                                            @RequestBody(required = false) String feedback,
+                                                            @AuthenticationPrincipal User admin) {
+        ProjectResponseDTO rejected = projectService.rejectProject(id, feedback, admin);
+        return ResponseEntity.ok(rejected);
     }
 
     @GetMapping("/{projectId}/contributors")

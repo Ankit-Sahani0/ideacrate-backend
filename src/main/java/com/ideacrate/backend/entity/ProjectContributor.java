@@ -1,6 +1,5 @@
-package com.ideacrate.backend.project;
+package com.ideacrate.backend.entity;
 
-import com.ideacrate.backend.user.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -27,7 +26,7 @@ public class ProjectContributor {
     private User user;
 
     @Column(nullable = false)
-    private String role = "CONTRIBUTOR";
+    private String role = "MEMBER";
 
     @CreationTimestamp
     @Column(name = "added_at", nullable = false)

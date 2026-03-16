@@ -31,3 +31,8 @@ target/
 
 # Ignore local application properties
 application-local.properties
+
+# Environment files with secrets
+.env
+.env.local
+.env.*.local
